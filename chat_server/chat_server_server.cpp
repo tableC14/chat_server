@@ -119,44 +119,78 @@ private:
 };
 
 // 채팅 세션 클래스
-class ChatSession {
+class ChatSession : public std::enable_shared_from_this<ChatSession> {
 public:
-    ChatSession(tcp::socket socket, ChatRoom& room, int room_id, int user_id)
-        : socket_(std::move(socket)), room_(room), room_id_(room_id), user_id_(user_id) {
+    ChatSession(tcp::socket socket, ChatServer& server)
+        : socket_(std::move(socket)), server_(server) {
     }
 
     void start(std::shared_ptr<ChatSession> self) {
-        self_ = self;  // 자신을 관리하는 shared_ptr 저장
-        room_.join(self);  // self 전달
-        do_read();
+        self_ = self;
+        read_initial_data();
     }
 
     tcp::socket& get_socket() { return socket_; }
 
 private:
-    void do_read() {
+    void read_initial_data() {
+        auto self = shared_from_this();
         boost::asio::async_read_until(socket_, boost::asio::dynamic_buffer(buffer_), "\n",
-            [this](boost::system::error_code ec, std::size_t length) {
+            [this, self](boost::system::error_code ec, std::size_t length) {
                 if (!ec) {
-                    std::string message = buffer_.substr(0, length - 1);
+                    std::string data = buffer_.substr(0, length - 1);
                     buffer_.erase(0, length);
-                    room_.broadcast(message);
-                    room_.save_message_to_db(room_id_, user_id_, message);
+
+                    // room_id와 user_id 파싱
+                    parse_initial_data(data);
+
+                    // ChatServer를 통해 적절한 방 찾기
+                    ChatRoom& room = server_.get_or_create_room(room_id_);
+                    room.join(self);
+
                     do_read();
                 }
                 else {
-                    room_.leave(self_);  // shared_ptr를 직접 전달
+                    std::cerr << "Error reading initial data: " << ec.message() << std::endl;
+                }
+            });
+    }
+
+    void parse_initial_data(const std::string& data) {
+        auto comma_pos = data.find(',');
+        if (comma_pos != std::string::npos) {
+            room_id_ = std::stoi(data.substr(0, comma_pos));
+            user_id_ = std::stoi(data.substr(comma_pos + 1));
+        }
+        else {
+            std::cerr << "Invalid data format: " << data << std::endl;
+        }
+    }
+
+    void do_read() {
+        auto self = shared_from_this();
+        boost::asio::async_read_until(socket_, boost::asio::dynamic_buffer(buffer_), "\n",
+            [this, self](boost::system::error_code ec, std::size_t length) {
+                if (!ec) {
+                    std::string message = buffer_.substr(0, length - 1);
+                    buffer_.erase(0, length);
+                    server_.get_or_create_room(room_id_).broadcast(message);
+                    do_read();
+                }
+                else {
+                    server_.get_or_create_room(room_id_).leave(self);
                 }
             });
     }
 
     tcp::socket socket_;
-    ChatRoom& room_;
+    ChatServer& server_;
     int room_id_;
     int user_id_;
     std::string buffer_;
-    std::shared_ptr<ChatSession> self_;  // 자신을 관리하는 shared_ptr
+    std::shared_ptr<ChatSession> self_;
 };
+
 
 // 채팅 서버 클래스
 class ChatServer {
@@ -167,24 +201,35 @@ public:
         do_accept();
     }
 
+    // 특정 room_id에 해당하는 ChatRoom을 반환 (없으면 생성)
+    ChatRoom& get_or_create_room(int room_id) {
+        auto it = rooms_.find(room_id);
+        if (it == rooms_.end()) {
+            auto emplace_result = rooms_.emplace(room_id, std::make_unique<ChatRoom>());
+            auto& new_it = emplace_result.first;  // 삽입된 요소의 반복자
+            bool success = emplace_result.second; // 삽입 성공 여부
+            return *(new_it->second);
+        }
+        return *(it->second);
+    }
 private:
     void do_accept() {
         acceptor_.async_accept(
             [this](boost::system::error_code ec, tcp::socket socket) {
                 if (!ec) {
                     std::cout << "New connection from " << socket.remote_endpoint() << std::endl;
-                    int room_id = 1;  // 예제용 고정 ID
-                    int user_id = 1;  // 예제용 고정 사용자 ID
-                    auto session = std::make_shared<ChatSession>(std::move(socket), room_, room_id, user_id);
-                    session->start(session);  // shared_ptr 전달
+
+                    auto session = std::make_shared<ChatSession>(std::move(socket), *this);
+                    session->start(session);  // ChatSession에서 room_id와 user_id를 받아 방에 입장
                 }
                 do_accept();
             });
     }
 
     tcp::acceptor acceptor_;
-    ChatRoom room_;
+    std::unordered_map<int, std::unique_ptr<ChatRoom>> rooms_; // room_id별 ChatRoom 관리
 };
+
 
 int main() {
     try {
