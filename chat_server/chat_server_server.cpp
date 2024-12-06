@@ -75,6 +75,7 @@ public:
 
     void leave(std::shared_ptr<ChatSession> session) {
         members_.erase(session);
+        // if(members_)
         broadcast("A user has left the chat.");
     }
 
@@ -114,6 +115,9 @@ public:
         sqlite3_close(db);
     }
 
+    size_t member_count() const {
+        return members_.size();
+    }
 private:
     std::unordered_set<std::shared_ptr<ChatSession>> members_;  // shared_ptr 관리
 };
@@ -128,6 +132,11 @@ public:
     void start(std::shared_ptr<ChatSession> self) {
         self_ = self;
         read_initial_data();
+    }
+
+    void leave_room() {
+        server_.get_or_create_room(room_id_).leave(self_);
+        server_.remove_empty_room(room_id_); // 사용자가 나간 후 방을 확인하여 제거
     }
 
     tcp::socket& get_socket() { return socket_; }
@@ -211,6 +220,14 @@ public:
             return *(new_it->second);
         }
         return *(it->second);
+    }
+
+    void remove_empty_room(int room_id) {
+        auto it = rooms_.find(room_id);
+        if (it != rooms_.end() && it->second->member_count() == 0) {
+            rooms_.erase(it);
+            std::cout << "Room " << room_id << " has been removed (no members)." << std::endl;
+        }
     }
 private:
     void do_accept() {
