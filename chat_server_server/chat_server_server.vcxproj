@@ -21,8 +21,8 @@
   <PropertyGroup Label="Globals">
     <VCProjectVersion>17.0</VCProjectVersion>
     <Keyword>Win32Proj</Keyword>
-    <ProjectGuid>{46ae10bc-4674-4e11-8575-462943aadd86}</ProjectGuid>
-    <RootNamespace>chatserver</RootNamespace>
+    <ProjectGuid>{5cb4eb0e-3648-450d-b15b-334ff29b4e8d}</ProjectGuid>
+    <RootNamespace>chatserverserver</RootNamespace>
     <WindowsTargetPlatformVersion>10.0</WindowsTargetPlatformVersion>
   </PropertyGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
@@ -104,10 +104,12 @@
       <SDLCheck>true</SDLCheck>
       <PreprocessorDefinitions>_DEBUG;_WINDOWS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
+      <AdditionalIncludeDirectories>C:\Users\qwertier\source\repos\chat_server\chat_server_server;C:\local\boost_1_86_0</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
-      <SubSystem>Windows</SubSystem>
+      <SubSystem>Console</SubSystem>
       <GenerateDebugInformation>true</GenerateDebugInformation>
+      <AdditionalLibraryDirectories>C:\local\boost_1_86_0;C:\Users\qwertier\source\repos\chat_server\chat_server_server</AdditionalLibraryDirectories>
     </Link>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
@@ -127,19 +129,19 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
-    <ClInclude Include="chat_server.h" />
+    <ClInclude Include="chat_server_server.h" />
     <ClInclude Include="framework.h" />
     <ClInclude Include="Resource.h" />
     <ClInclude Include="targetver.h" />
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="chat_server.cpp" />
+    <ClCompile Include="chat_server_server.cpp" />
   </ItemGroup>
   <ItemGroup>
-    <ResourceCompile Include="chat_server.rc" />
+    <ResourceCompile Include="chat_server_server.rc" />
   </ItemGroup>
   <ItemGroup>
-    <Image Include="chat_server.ico" />
+    <Image Include="chat_server_server.ico" />
     <Image Include="small.ico" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />

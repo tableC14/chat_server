@@ -14,6 +14,8 @@ using namespace std;
 
 // 데이터베이스 파일 경로
 const string DB_FILE = "data/chat_server.db";
+/*const int port = 12345;
+const string endpoint = "localhost";*/
 
 // SQLite 데이터베이스 초기화 함수
 void initialize_database() {
@@ -130,8 +132,9 @@ public:
         : socket_(move(socket)), server_(server) {
     }
 
-    void start(shared_ptr<ChatSession> self) {
+    void start(shared_ptr<ChatSession> self, shared_ptr<ChatUser> user) {
         self_ = self;
+        user_ = user;
         read_initial_data();
     }
 
@@ -194,10 +197,12 @@ private:
     }
 
     tcp::socket socket_;
-    ChatServer& server_;
+    //ChatServer& server_;
     int room_id_;
     string buffer_;
     shared_ptr<ChatSession> self_;
+    shared_ptr<ChatRoom> room_;
+    shared_ptr<ChatUser> user_;
 };
 
 
@@ -229,6 +234,23 @@ public:
             cout << "Room " << room_id << " has been removed (no members)." << endl;
         }
     }
+
+    void add_user(shared_ptr<ChatUser> user) {
+        users_[user->get_userID()] = user;
+    }
+
+    shared_ptr<ChatUser> get_user(int user_id) {
+        auto it = users_.find(user_id);
+        if (it != users_.end()) {
+            return it->second;
+        }
+        return nullptr;
+    }
+
+    void remove_user(int user_id) {
+        users_.erase(user_id);
+    }
+
 private:
     void do_accept() {
         acceptor_.async_accept(
@@ -237,7 +259,7 @@ private:
                     cout << "New connection from " << socket.remote_endpoint() << endl;
 
                     auto session = make_shared<ChatSession>(move(socket), *this);
-                    session->start(session);  // ChatSession에서 room_id와 user_id를 받아 방에 입장
+                    session->start(session,);  // ChatSession에서 room_id와 user_id를 받아 방에 입장
                 }
                 do_accept();
             });
@@ -271,7 +293,9 @@ private:
     }
 
     tcp::acceptor acceptor_;
-    unordered_map<int, unique_ptr<ChatRoom>> rooms_; // room_id별 ChatRoom 관리
+    unordered_map<int, shared_ptr<ChatRoom>> rooms_; // room_id별 ChatRoom 관리
+    unordered_map<int, shared_ptr<ChatUser>> users_; // user_id별 ChatUser 관리
+    unordered_map<int, shared_ptr<ChatSession>> sessions_; // user_id별 ChatUser 관리
 };
 
 class ChatUser {
@@ -279,14 +303,14 @@ public:
     int get_userID() { return user_id_; }
     string get_address() { return endpoint_ + ":" + to_string(port_); }
     string get_name() { return name_; }
-    void set_login(bool stat) {is_logined_ = stat;}
-    bool get_login() { return is_logined_; }
+    //void set_login(bool stat) {is_logined_ = stat;}
+    //bool get_login() { return is_logined_; }
 private:
     int user_id_;
     string endpoint_;
     int port_;
     string name_;
-    bool is_logined_;
+    //bool is_logined_;
 };
 
 
