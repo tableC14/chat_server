@@ -317,7 +317,7 @@ private:
 
 
 
-        case 'l': // Covers login_user
+        case 'l': // Covers login_user 
             if (command == "login_user") {
                 string id = param_map["id"];
                 string password = param_map["password"];
