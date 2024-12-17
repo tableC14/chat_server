@@ -315,6 +315,8 @@ private:
             }
             break;
 
+
+
         case 'l': // Covers login_user
             if (command == "login_user") {
                 string id = param_map["id"];
@@ -370,6 +372,93 @@ private:
             break;
         }
     }
+
+   /* void check_message(string message) {
+        size_t delimiter_pos = message.find('?');
+        if (delimiter_pos == string::npos) {
+            cerr << "Invalid message format: " << message << endl;
+            return;
+        }
+
+        string command = message.substr(0, delimiter_pos);
+        string params = message.substr(delimiter_pos + 1);
+
+        unordered_map<string, string> param_map;
+        size_t start = 0, end;
+        while ((end = params.find('/', start)) != string::npos) {
+            string pair = params.substr(start, end - start);
+            size_t sep = pair.find(':');
+            if (sep != string::npos) {
+                param_map[pair.substr(0, sep)] = pair.substr(sep + 1);
+            }
+            start = end + 1;
+        }
+
+        if (start < params.size()) {
+            string pair = params.substr(start);
+            size_t sep = pair.find(':');
+            if (sep != string::npos) {
+                param_map[pair.substr(0, sep)] = pair.substr(sep + 1);
+            }
+        }
+
+        if (command.empty()) {
+            cerr << "Empty command received." << endl;
+            return;
+        }
+
+        if (command == "create_user") {
+            string id = param_map["id"];
+            string password = param_map["password"];
+            cout << "Creating user with id: " << id << " and password: " << password << endl;
+        }
+        else if (command == "login_user") {
+            string id = param_map["id"];
+            string password = param_map["password"];
+            cout << "Logging in user with id: " << id << " and password: " << password << endl;
+        }
+        else if (command == "create_room") {
+            string title = param_map["title"];
+            cout << "Creating room with title: " << title << endl;
+        }
+        else if (command == "join_room") {
+            int room_id = stoi(param_map["room_id"]);
+            cout << "Joining room with id: " << room_id << endl;
+        }
+        else if (command == "send_text") {
+            int room_id = stoi(param_map["room_id"]);
+            int user_id = stoi(param_map["user_id"]);
+            string text = param_map["text"];
+            cout << "User " << user_id << " is sending message: " << text << " in room " << room_id << endl;
+        }
+        else if (command == "exit_room") {
+            int room_id = stoi(param_map["room_id"]);
+            int user_id = stoi(param_map["user_id"]);
+            cout << "User " << user_id << " is exiting room " << room_id << endl;
+        }
+        else if (command == "kick_user") {
+            int room_id = stoi(param_map["room_id"]);
+            int user_id = stoi(param_map["user_id"]);
+            int target_user_id = stoi(param_map["target_user_id"]);
+            cout << "User " << user_id << " is kicking user " << target_user_id << " from room " << room_id << endl;
+        }
+        else if (command == "grant_host") {
+            int room_id = stoi(param_map["room_id"]);
+            int user_id = stoi(param_map["user_id"]);
+            int target_user_id = stoi(param_map["target_user_id"]);
+            cout << "User " << user_id << " is granting host role to user " << target_user_id << " in room " << room_id << endl;
+        }
+        else if (command == "invite_user") {
+            int room_id = stoi(param_map["room_id"]);
+            int user_id = stoi(param_map["user_id"]);
+            int target_user_id = stoi(param_map["target_user_id"]);
+            cout << "User " << user_id << " is inviting user " << target_user_id << " to room " << room_id << endl;
+        }
+        else {
+            cerr << "Unknown command: " << command << endl;
+        }
+    }*/
+
 
 
     //void check_message(string message) {
@@ -442,3 +531,5 @@ int main() {
 
     return 0;
 }
+
+//유저초대를 했을때 받는 유저에 대한 인터페이스? 
